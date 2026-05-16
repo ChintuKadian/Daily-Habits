@@ -11,8 +11,8 @@ const TaskBoard = ({ onTaskAction }) => {
   const [newTask, setNewTask] = useState({ name: '', category: 'General', priority: 'medium', deadline: '' });
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-  const handleComplete = async (id) => {
-    await completeTask(id);
+  const handleComplete = async (id, timeSpent = 0) => {
+    await completeTask(id, timeSpent);
     if (onTaskAction) onTaskAction(); // trigger scoreboard refresh
   };
 
