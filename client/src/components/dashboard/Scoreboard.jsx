@@ -5,12 +5,12 @@ import PointsCounter from './PointsCounter';
 import axios from '../../api/axios';
 import { Info } from 'lucide-react';
 
-const Scoreboard = () => {
+const Scoreboard = ({ refreshKey = 0 }) => {
   const socket = useContext(SocketContext);
   const { user, setUser } = useContext(AuthContext);
   const [todayScore, setTodayScore] = useState({ totalPoints: 0, rank: 'D' });
 
-  // Fetch today's score from analytics on mount
+  // Fetch today's score from analytics on mount AND whenever a task action fires
   useEffect(() => {
     const fetchTodayScore = async () => {
       try {
@@ -25,7 +25,7 @@ const Scoreboard = () => {
     };
 
     fetchTodayScore();
-  }, []);
+  }, [refreshKey]);
 
   // Update from user dailyScores if available
   useEffect(() => {

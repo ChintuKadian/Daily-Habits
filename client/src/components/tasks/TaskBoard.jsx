@@ -3,7 +3,7 @@ import useTasks from '../../hooks/useTasks';
 import TaskCard from './TaskCard';
 import RecoveryModal from './RecoveryModal';
 
-const TaskBoard = () => {
+const TaskBoard = ({ onTaskAction }) => {
   const { tasks, loading, completeTask, recoverTask, createTask, deleteTask } = useTasks();
   const [selectedTask, setSelectedTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -13,6 +13,7 @@ const TaskBoard = () => {
 
   const handleComplete = async (id) => {
     await completeTask(id);
+    if (onTaskAction) onTaskAction(); // trigger scoreboard refresh
   };
 
   const openRecoverModal = (task) => {
@@ -23,6 +24,7 @@ const TaskBoard = () => {
   const handleRecoverSubmit = async (note) => {
     if (selectedTask) {
       await recoverTask(selectedTask._id, note);
+      if (onTaskAction) onTaskAction(); // trigger scoreboard refresh
       setIsModalOpen(false);
       setSelectedTask(null);
     }
