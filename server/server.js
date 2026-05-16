@@ -18,7 +18,7 @@ const analyticsRoutes = require('./routes/analytics.routes');
 connectDB();
 
 const app = express();
-app.set('trust proxy', 1);
+app.set('trust proxy', 'loopback, linklocal, uniquelocal');
 const server = http.createServer(app);
 
 // Setup Socket.io
