@@ -38,7 +38,7 @@ router.get('/google/callback', oauthLimiter, (req, res, next) => {
       expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'Lax'
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax'
     });
     res.redirect(`${process.env.CLIENT_URL || 'http://localhost:5173'}/`);
   })(req, res, next);
