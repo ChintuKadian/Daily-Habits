@@ -64,7 +64,7 @@ const TaskBoard = ({ onTaskAction }) => {
           onClick={() => setIsCreateOpen(true)}
           className="bg-indigo-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-colors shadow-sm"
         >
-          + New Task
+          + Task
         </button>
       </div>
 

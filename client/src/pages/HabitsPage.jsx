@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import useHabits from '../hooks/useHabits';
 import { useAudio } from '../context/AudioContext';
 import { Plus, X, Trash2, CheckCircle2, Flame } from 'lucide-react';
@@ -12,39 +12,64 @@ const HabitsPage = () => {
   const { playPop, playError } = useAudio();
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [newHabit, setNewHabit] = useState({ name: '', category: 'General' });
+  const tableScrollRef = useRef(null);
 
   // Real current date for strict locking
   const realToday = new Date();
   const realYear = realToday.getFullYear();
-  const realMonth = realToday.getMonth(); 
+  const realMonth = realToday.getMonth();
   const realDay = realToday.getDate();
   const realTodayStr = getLocalDateString(realYear, realMonth, realDay);
 
   // Viewing date state
   const [viewYear, setViewYear] = useState(realYear);
   const [viewMonth, setViewMonth] = useState(realMonth);
-  
+
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
   const daysArray = Array.from({ length: daysInMonth }, (_, i) => i + 1);
 
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const yearOptions = [viewYear - 1, viewYear, viewYear + 1]; // Continuous 3-year window
 
+  // Scroll table to today's column
+  const scrollToToday = useCallback(() => {
+    const el = tableScrollRef.current;
+    if (!el) return;
+    // Only scroll if viewing current month/year
+    if (viewYear !== realYear || viewMonth !== realMonth) return;
+    // Each day column is approx 40px wide, sticky "habit name" column is ~200px
+    const STICKY_WIDTH = 200;
+    const COL_WIDTH = 40;
+    const targetScrollLeft = STICKY_WIDTH + (realDay - 3) * COL_WIDTH;
+    el.scrollTo({ left: Math.max(0, targetScrollLeft), behavior: 'smooth' });
+  }, [viewYear, viewMonth, realYear, realMonth, realDay]);
+
+  // Scroll to today on mount and when viewing month/year matches current
+  useEffect(() => {
+    // Small timeout to let the DOM render
+    const timer = setTimeout(scrollToToday, 100);
+    return () => clearTimeout(timer);
+  }, [scrollToToday, habits.length]);
+
   const handleCreate = async (e) => {
     e.preventDefault();
     await createHabit(newHabit);
     setIsCreateOpen(false);
     setNewHabit({ name: '', category: 'General' });
+    // After creating, scroll to today
+    setTimeout(scrollToToday, 200);
   };
 
   const handleToggle = (habitId, day) => {
     const targetDateStr = getLocalDateString(viewYear, viewMonth, day);
     if (targetDateStr !== realTodayStr) {
       playError();
-      return; // Strict Midnight Lock: can only toggle real today
+      return;
     }
-    toggleHabit(habitId, targetDateStr, 0); // No time tracking
+    toggleHabit(habitId, targetDateStr, 0);
     playPop();
+    // Scroll to today after toggling
+    setTimeout(scrollToToday, 100);
   };
 
   const handleDelete = (id) => {
@@ -53,6 +78,7 @@ const HabitsPage = () => {
     }
   };
 
+  // Overall monthly progress
   const totalPossible = habits.length * daysInMonth;
   let totalCompleted = 0;
   habits.forEach(h => {
@@ -64,7 +90,7 @@ const HabitsPage = () => {
 
   return (
     <div className="max-w-7xl mx-auto space-y-6">
-      
+
       <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
         <div className="flex items-center space-x-6">
           <div>
@@ -72,15 +98,15 @@ const HabitsPage = () => {
             <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mt-1">Habit Tracker</p>
           </div>
           <div className="flex flex-col space-y-2 border-l pl-6 dark:border-slate-700">
-            <select 
-              value={viewMonth} 
+            <select
+              value={viewMonth}
               onChange={(e) => setViewMonth(Number(e.target.value))}
               className="bg-gray-50 dark:bg-slate-900 border dark:border-slate-700 text-sm font-bold text-gray-700 dark:text-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none"
             >
               {monthNames.map((m, i) => <option key={m} value={i}>{m}</option>)}
             </select>
-            <select 
-              value={viewYear} 
+            <select
+              value={viewYear}
               onChange={(e) => setViewYear(Number(e.target.value))}
               className="bg-gray-50 dark:bg-slate-900 border dark:border-slate-700 text-sm font-bold text-gray-700 dark:text-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-500 outline-none"
             >
@@ -88,24 +114,24 @@ const HabitsPage = () => {
             </select>
           </div>
         </div>
-        
+
         <div className="flex items-center space-x-8">
           <div className="flex flex-col items-center bg-indigo-50 dark:bg-indigo-900/20 px-6 py-3 rounded-2xl">
             <span className="text-xs font-bold text-indigo-400 uppercase">Monthly Progress</span>
             <span className="text-2xl font-black text-indigo-600 dark:text-indigo-400">{overallPercentage}%</span>
           </div>
-          <button 
+          <button
             onClick={() => setIsCreateOpen(true)}
             className="bg-indigo-600 text-white px-5 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md flex items-center space-x-2"
           >
             <Plus className="w-5 h-5" />
-            <span>New Habit</span>
+            <span>+ Habit</span>
           </button>
         </div>
       </div>
 
       <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto" ref={tableScrollRef}>
           <table className="w-full text-sm text-left whitespace-nowrap">
             <thead>
               <tr className="bg-gray-50 dark:bg-slate-900 border-b dark:border-slate-700">
@@ -127,13 +153,24 @@ const HabitsPage = () => {
               {habits.length === 0 ? (
                 <tr>
                   <td colSpan={daysInMonth + 2} className="px-6 py-12 text-center text-gray-500 font-medium">
-                    No habits created yet. Click "New Habit" to start building your routine!
+                    No habits created yet. Click "+ Habit" to start building your routine!
                   </td>
                 </tr>
               ) : (
                 habits.map((habit, index) => {
-                  const completedDays = habit.completionLog.filter(log => log.date.startsWith(`${viewYear}-${String(viewMonth + 1).padStart(2, '0')}`)).length;
-                  const percentage = Math.round((completedDays / daysInMonth) * 100);
+                  // Progress: only count days from habit creation date in this month
+                  const habitCreatedAt = new Date(habit.createdAt || 0);
+                  const monthPrefix = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}`;
+                  const completedDays = habit.completionLog.filter(log => log.date.startsWith(monthPrefix)).length;
+
+                  // Effective days = days from max(1st of month, creation date) to today (or end of month if past)
+                  const creationDay = (habitCreatedAt.getFullYear() === viewYear && habitCreatedAt.getMonth() === viewMonth)
+                    ? habitCreatedAt.getDate()
+                    : (habitCreatedAt > new Date(viewYear, viewMonth + 1, 0)) ? daysInMonth + 1 : 1;
+
+                  const lastDay = (viewYear === realYear && viewMonth === realMonth) ? realDay : daysInMonth;
+                  const effectiveDays = Math.max(0, lastDay - creationDay + 1);
+                  const percentage = effectiveDays === 0 ? 0 : Math.round((completedDays / effectiveDays) * 100);
 
                   // Calculate active streak
                   let currentStreak = 0;
@@ -145,7 +182,7 @@ const HabitsPage = () => {
                     d.setDate(d.getDate() - i);
                     const dateStr = getLocalDateString(d.getFullYear(), d.getMonth(), d.getDate());
                     const isCompleted = habit.completionLog.some(log => log.date === dateStr);
-                    
+
                     if (i === 0) {
                       if (isCompleted) currentStreak++;
                     } else {
@@ -171,23 +208,30 @@ const HabitsPage = () => {
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </td>
-                      
+
                       {daysArray.map(day => {
                         const isRealToday = viewYear === realYear && viewMonth === realMonth && day === realDay;
                         const dateStr = getLocalDateString(viewYear, viewMonth, day);
                         const isCompleted = habit.completionLog.some(log => log.date === dateStr);
-                        
+
+                        // Disable days before habit was created
+                        const cellDate = new Date(viewYear, viewMonth, day);
+                        const isBeforeCreation = habitCreatedAt && cellDate < new Date(habitCreatedAt.getFullYear(), habitCreatedAt.getMonth(), habitCreatedAt.getDate());
+
                         return (
                           <td key={day} className={`px-2 py-3 text-center ${isRealToday ? 'bg-indigo-50/20 dark:bg-indigo-900/10' : ''}`}>
                             <button
                               onClick={() => handleToggle(habit._id, day)}
                               disabled={!isRealToday}
+                              title={isBeforeCreation ? 'Habit not yet created' : undefined}
                               className={`w-6 h-6 rounded flex items-center justify-center transition-all mx-auto ${
-                                isCompleted 
-                                  ? 'bg-indigo-500 text-white shadow-[0_0_10px_rgba(99,102,241,0.5)] scale-110' 
-                                  : isRealToday 
-                                    ? 'bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 cursor-pointer border border-gray-200 dark:border-slate-600'
-                                    : 'bg-gray-50 dark:bg-slate-800/30 border border-gray-100 dark:border-slate-700/50 cursor-not-allowed opacity-40'
+                                isCompleted
+                                  ? 'bg-indigo-500 text-white shadow-[0_0_10px_rgba(99,102,241,0.5)] scale-110'
+                                  : isBeforeCreation
+                                    ? 'bg-gray-50 dark:bg-slate-800/20 border border-dashed border-gray-200 dark:border-slate-700/30 opacity-20 cursor-not-allowed'
+                                    : isRealToday
+                                      ? 'bg-gray-100 dark:bg-slate-700 hover:bg-gray-200 dark:hover:bg-slate-600 cursor-pointer border border-gray-200 dark:border-slate-600'
+                                      : 'bg-gray-50 dark:bg-slate-800/30 border border-gray-100 dark:border-slate-700/50 cursor-not-allowed opacity-40'
                               }`}
                             >
                               {isCompleted && <CheckCircle2 className="w-4 h-4" />}
@@ -195,11 +239,11 @@ const HabitsPage = () => {
                           </td>
                         );
                       })}
-                      
+
                       <td className="px-6 py-3 text-right">
                         <div className="flex items-center justify-end space-x-3">
                           <div className="w-24 bg-gray-100 dark:bg-slate-700 rounded-full h-2 overflow-hidden shadow-inner">
-                            <div className="bg-gradient-to-r from-emerald-400 to-green-500 h-2 rounded-full" style={{ width: `${percentage}%` }}></div>
+                            <div className="bg-gradient-to-r from-emerald-400 to-green-500 h-2 rounded-full transition-all duration-500" style={{ width: `${Math.min(100, percentage)}%` }}></div>
                           </div>
                           <span className="font-bold text-gray-700 dark:text-slate-300 text-xs w-12">{percentage}%</span>
                         </div>
@@ -216,7 +260,7 @@ const HabitsPage = () => {
       {isCreateOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <div className="bg-white dark:bg-slate-800 rounded-3xl p-8 max-w-md w-full shadow-2xl relative border dark:border-slate-700">
-            <button 
+            <button
               onClick={() => setIsCreateOpen(false)}
               className="absolute right-6 top-6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 bg-gray-100 dark:bg-slate-700 rounded-full p-2"
             >
@@ -226,8 +270,8 @@ const HabitsPage = () => {
             <form onSubmit={handleCreate} className="space-y-5">
               <div>
                 <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Habit Name</label>
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   required
                   autoFocus
                   className="w-full border dark:border-slate-600 p-3 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-shadow bg-gray-50 dark:bg-slate-700 dark:text-white"
@@ -236,8 +280,8 @@ const HabitsPage = () => {
                   placeholder="e.g. Read 10 pages"
                 />
               </div>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-xl hover:bg-indigo-700 shadow-md transition-colors"
               >
                 Create Habit
