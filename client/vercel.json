@@ -1,5 +1,16 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    {
+      "source": "/api/:path*",
+      "destination": "https://daily-habits-iasi.onrender.com/api/:path*"
+    },
+    {
+      "source": "/socket.io/:path*",
+      "destination": "https://daily-habits-iasi.onrender.com/socket.io/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
   ]
 }
