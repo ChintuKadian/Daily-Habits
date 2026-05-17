@@ -1,4 +1,5 @@
 import React, { useMemo, useRef, useEffect } from 'react';
+import { usePoints } from '../../context/PointsContext';
 
 // Vivid GitHub-style green ramp — much more saturated than before
 const RANK_STYLES = {
@@ -17,6 +18,7 @@ const getRankStyle = (rank, isDark = false) => {
 
 const ContributionHeatmap = ({ data }) => {
   const scrollRef = useRef(null);
+  const { pointsEnabled } = usePoints();
 
   const { monthsData, totalContributions, currentActiveStreak, maxStreak } = useMemo(() => {
     const days = [];
@@ -108,7 +110,7 @@ const ContributionHeatmap = ({ data }) => {
   return (
     <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 transition-colors duration-300">
       <h3 className="text-lg font-bold text-gray-800 dark:text-slate-100 mb-6">
-        {totalContributions} contributions in the last year
+        {totalContributions} active days in the last year
       </h3>
 
       {/* Streak Indicators */}
@@ -168,6 +170,10 @@ const ContributionHeatmap = ({ data }) => {
                           return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
                         })();
 
+                        const titleText = pointsEnabled
+                          ? `${day.dateStr}: ${day.points} pts${isEmpty ? ' (no activity)' : ` — ${day.rank}-Rank`}`
+                          : `${day.dateStr}: ${isEmpty ? 'No activity' : 'Active day'}`;
+
                         return (
                           <div
                             key={day.dateStr}
@@ -176,7 +182,7 @@ const ContributionHeatmap = ({ data }) => {
                               ? { backgroundColor: 'var(--heat-empty, #e9f5e9)' }
                               : getRankStyle(day.rank)
                             }
-                            title={`${day.dateStr}: ${day.points} pts${isEmpty ? ' (no activity)' : ` — ${day.rank}-Rank`}`}
+                            title={titleText}
                           />
                         );
                       })}
@@ -195,11 +201,11 @@ const ContributionHeatmap = ({ data }) => {
             <span>Less</span>
             <div className="flex space-x-1">
               <div className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: '#e9f5e9' }} title="No activity" />
-              <div className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: '#4ade80' }} title="D-Rank" />
-              <div className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: '#22c55e' }} title="C-Rank" />
-              <div className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: '#16a34a' }} title="B-Rank" />
-              <div className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: '#15803d' }} title="A-Rank" />
-              <div className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: '#166534' }} title="S-Rank" />
+              <div className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: '#4ade80' }} title={pointsEnabled ? 'D-Rank' : 'Level 1'} />
+              <div className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: '#22c55e' }} title={pointsEnabled ? 'C-Rank' : 'Level 2'} />
+              <div className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: '#16a34a' }} title={pointsEnabled ? 'B-Rank' : 'Level 3'} />
+              <div className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: '#15803d' }} title={pointsEnabled ? 'A-Rank' : 'Level 4'} />
+              <div className="w-3.5 h-3.5 rounded-sm" style={{ backgroundColor: '#166534' }} title={pointsEnabled ? 'S-Rank' : 'Level 5'} />
             </div>
             <span>More</span>
           </div>

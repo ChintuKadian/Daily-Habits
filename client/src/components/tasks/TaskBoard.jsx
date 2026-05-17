@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import useTasks from '../../hooks/useTasks';
 import TaskCard from './TaskCard';
 import RecoveryModal from './RecoveryModal';
+import { usePoints } from '../../context/PointsContext';
 import { X, Plus } from 'lucide-react';
 
 // Predefined categories with emoji icons — no more blank text box!
@@ -24,6 +25,7 @@ const PRIORITIES = [
 
 const TaskBoard = ({ onTaskAction }) => {
   const { tasks, loading, completeTask, recoverTask, createTask, deleteTask } = useTasks();
+  const { pointsEnabled } = usePoints();
   const [selectedTask, setSelectedTask] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -95,7 +97,9 @@ const TaskBoard = ({ onTaskAction }) => {
             <div className="flex items-center justify-between px-7 pt-7 pb-4">
               <div>
                 <h2 className="text-2xl font-black text-gray-800 dark:text-slate-100">New Task</h2>
-                <p className="text-sm text-gray-400 dark:text-slate-500 mt-0.5">Complete on time to earn full points</p>
+                <p className="text-sm text-gray-400 dark:text-slate-500 mt-0.5">
+                  {pointsEnabled ? 'Complete on time to earn full points' : 'Set a deadline and stay organized'}
+                </p>
               </div>
               <button
                 onClick={() => setIsCreateOpen(false)}
@@ -146,7 +150,9 @@ const TaskBoard = ({ onTaskAction }) => {
 
               {/* Priority cards */}
               <div>
-                <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Priority & Points</label>
+                <label className="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">
+                  {pointsEnabled ? 'Priority & Points' : 'Priority'}
+                </label>
                 <div className="grid grid-cols-3 gap-2">
                   {PRIORITIES.map(p => (
                     <button
@@ -161,8 +167,12 @@ const TaskBoard = ({ onTaskAction }) => {
                     >
                       <div className={`w-2.5 h-2.5 rounded-full ${p.color} mb-1.5`} />
                       <div className="text-xs font-bold">{p.label}</div>
-                      <div className="text-xs font-black mt-0.5">{p.pts} pts</div>
-                      <div className="text-xs text-gray-400 dark:text-slate-500">{p.latePts} if late</div>
+                      {pointsEnabled && (
+                        <>
+                          <div className="text-xs font-black mt-0.5">{p.pts} pts</div>
+                          <div className="text-xs text-gray-400 dark:text-slate-500">{p.latePts} if late</div>
+                        </>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -183,7 +193,11 @@ const TaskBoard = ({ onTaskAction }) => {
               {/* Footer summary + actions */}
               <div className="flex items-center justify-between pt-2 border-t dark:border-slate-700">
                 <p className="text-xs text-gray-400 dark:text-slate-500">
-                  You'll earn <span className={`font-black ${selectedPriority?.text}`}>{selectedPriority?.pts} pts</span> if completed on time
+                  {pointsEnabled ? (
+                    <>You'll earn <span className={`font-black ${selectedPriority?.text}`}>{selectedPriority?.pts} pts</span> if completed on time</>
+                  ) : (
+                    <span>Stay disciplined and complete before deadline</span>
+                  )}
                 </p>
                 <div className="flex space-x-3">
                   <button

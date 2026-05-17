@@ -1,8 +1,9 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import axios from '../api/axios';
-import { TrendingUp, Award, Zap, Calendar } from 'lucide-react';
+import { TrendingUp, Award, Zap, Calendar, CheckSquare } from 'lucide-react';
 import ContributionHeatmap from '../components/analytics/ContributionHeatmap';
+import { usePoints } from '../context/PointsContext';
 
 const EMOJI_MAP = { Work:'💼', Study:'📚', Health:'🏃', Personal:'🌱', Finance:'💰', Creative:'🎨', Social:'👥', Home:'🏠', General:'📋' };
 const COLORS   = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#f97316','#84cc16'];
@@ -11,6 +12,7 @@ const AnalyticsPage = () => {
   const [data, setData]             = useState(null);
   const [loading, setLoading]       = useState(true);
   const [categoryData, setCategoryData] = useState([]);
+  const { pointsEnabled }           = usePoints();
 
   useEffect(() => {
     const fetchAll = async () => {
@@ -69,6 +71,15 @@ const AnalyticsPage = () => {
       .reduce((sum, s) => sum + (s.totalPoints || 0), 0);
   }, [data]);
 
+  const totalCompletedTasks = useMemo(() => {
+    return categoryData.reduce((sum, c) => sum + c.taskCount, 0);
+  }, [categoryData]);
+
+  const activeDaysCount = useMemo(() => {
+    if (!data?.heatmapData) return 0;
+    return data.heatmapData.filter(s => s.totalPoints > 0).length;
+  }, [data]);
+
   if (loading) return <div className="text-center py-10">Loading analytics...</div>;
   if (!data) return <div className="text-center py-10">No data available</div>;
 
@@ -78,77 +89,105 @@ const AnalyticsPage = () => {
         <h2 className="text-3xl font-black text-gray-800 dark:text-slate-100 tracking-tight">Pattern Analytics</h2>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center space-x-6 transition-colors">
-          <div className="p-5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl shadow-inner">
-            <TrendingUp className="w-8 h-8" />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-1">Lifetime Points</p>
-            <p className="text-4xl font-black text-gray-800 dark:text-slate-100 tracking-tight">{data.totalLifetimePoints}</p>
-          </div>
-        </div>
+      <div className={`grid grid-cols-1 sm:grid-cols-2 ${pointsEnabled ? 'md:grid-cols-4' : 'md:grid-cols-2'} gap-6 mb-8`}>
+        {pointsEnabled ? (
+          <>
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center space-x-6 transition-colors">
+              <div className="p-5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl shadow-inner">
+                <TrendingUp className="w-8 h-8" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-1">Lifetime Points</p>
+                <p className="text-4xl font-black text-gray-800 dark:text-slate-100 tracking-tight">{data.totalLifetimePoints}</p>
+              </div>
+            </div>
 
-        <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center space-x-6 transition-colors">
-          <div className="p-5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl shadow-inner">
-            <Calendar className="w-8 h-8" />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-1">Last 7 Days</p>
-            <p className="text-4xl font-black text-gray-800 dark:text-slate-100 tracking-tight">{last7DaysPoints}</p>
-          </div>
-        </div>
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center space-x-6 transition-colors">
+              <div className="p-5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl shadow-inner">
+                <Calendar className="w-8 h-8" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-1">Last 7 Days</p>
+                <p className="text-4xl font-black text-gray-800 dark:text-slate-100 tracking-tight">{last7DaysPoints}</p>
+              </div>
+            </div>
 
-        {data.currentSRankStreak > 0 && (
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center space-x-6 transition-colors">
-            <div className="p-5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-500 rounded-2xl shadow-inner">
-              <Award className="w-8 h-8" />
-            </div>
-            <div>
-              <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-1">Current S-Rank Streak</p>
-              <p className="text-4xl font-black text-gray-800 dark:text-slate-100 tracking-tight">{data.currentSRankStreak} <span className="text-xl text-gray-400 dark:text-slate-500">Days</span></p>
-            </div>
-          </div>
-        )}
+            {data.currentSRankStreak > 0 && (
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center space-x-6 transition-colors">
+                <div className="p-5 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-500 rounded-2xl shadow-inner">
+                  <Award className="w-8 h-8" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-1">Current S-Rank Streak</p>
+                  <p className="text-4xl font-black text-gray-800 dark:text-slate-100 tracking-tight">{data.currentSRankStreak} <span className="text-xl text-gray-400 dark:text-slate-500">Days</span></p>
+                </div>
+              </div>
+            )}
 
-        {data.maxSRankStreak > 0 && (
-          <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center space-x-6 transition-colors">
-            <div className="p-5 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-500 rounded-2xl shadow-inner">
-              <Zap className="w-8 h-8" />
+            {data.maxSRankStreak > 0 && (
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center space-x-6 transition-colors">
+                <div className="p-5 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-500 rounded-2xl shadow-inner">
+                  <Zap className="w-8 h-8" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-1">Max S-Rank Streak</p>
+                  <p className="text-4xl font-black text-gray-800 dark:text-slate-100 tracking-tight">{data.maxSRankStreak} <span className="text-xl text-gray-400 dark:text-slate-500">Days</span></p>
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center space-x-6 transition-colors">
+              <div className="p-5 bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-2xl shadow-inner">
+                <CheckSquare className="w-8 h-8" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-1">Tasks Completed</p>
+                <p className="text-4xl font-black text-gray-800 dark:text-slate-100 tracking-tight">{totalCompletedTasks}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-1">Max S-Rank Streak</p>
-              <p className="text-4xl font-black text-gray-800 dark:text-slate-100 tracking-tight">{data.maxSRankStreak} <span className="text-xl text-gray-400 dark:text-slate-500">Days</span></p>
+
+            <div className="bg-white dark:bg-slate-800 p-6 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 flex items-center space-x-6 transition-colors">
+              <div className="p-5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 rounded-2xl shadow-inner">
+                <Calendar className="w-8 h-8" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-gray-500 dark:text-slate-400 uppercase tracking-widest mb-1">Active Days</p>
+                <p className="text-4xl font-black text-gray-800 dark:text-slate-100 tracking-tight">{activeDaysCount} <span className="text-xl text-gray-400 dark:text-slate-500">Days</span></p>
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
 
       <ContributionHeatmap data={data.heatmapData} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 transition-colors">
-          <h3 className="text-xl font-bold text-gray-800 dark:text-slate-100 mb-6">Activity (Points)</h3>
-          <div className="h-80 w-full">
-            {data.chartData && data.chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.chartData}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 600 }} dy={10} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 600 }} dx={-10} />
-                  <Tooltip 
-                    cursor={{ fill: '#F3F4F6' }}
-                    contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', padding: '12px 16px', backgroundColor: 'rgba(255, 255, 255, 0.95)' }}
-                    itemStyle={{ fontWeight: 'bold' }}
-                  />
-                  <Bar dataKey="points" fill="#4F46E5" radius={[8, 8, 0, 0]} barSize={40} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-full text-gray-500 font-medium">Not enough data to display chart</div>
-            )}
+      <div className={`grid grid-cols-1 ${pointsEnabled ? 'md:grid-cols-2' : ''} gap-6`}>
+        {pointsEnabled && (
+          <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 transition-colors">
+            <h3 className="text-xl font-bold text-gray-800 dark:text-slate-100 mb-6">Activity (Points)</h3>
+            <div className="h-80 w-full">
+              {data.chartData && data.chartData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data.chartData}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 600 }} dy={10} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fill: '#6B7280', fontSize: 12, fontWeight: 600 }} dx={-10} />
+                    <Tooltip 
+                      cursor={{ fill: '#F3F4F6' }}
+                      contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', padding: '12px 16px', backgroundColor: 'rgba(255, 255, 255, 0.95)' }}
+                      itemStyle={{ fontWeight: 'bold' }}
+                    />
+                    <Bar dataKey="points" fill="#4F46E5" radius={[8, 8, 0, 0]} barSize={40} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500 font-medium">Not enough data to display chart</div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 transition-colors">
           <h3 className="text-xl font-bold text-gray-800 dark:text-slate-100 mb-6">Time Spent (Mins)</h3>
@@ -189,9 +228,10 @@ const AnalyticsPage = () => {
         ) : (
           <div className="space-y-5">
             {(() => {
-              const maxPts = categoryData[0]?.totalPoints || 1;
+              const maxVal = categoryData[0]?.[pointsEnabled ? 'totalPoints' : 'taskCount'] || 1;
               return categoryData.map((cat, idx) => {
-                const barWidth = Math.max(4, Math.round((cat.totalPoints / maxPts) * 100));
+                const currentVal = cat[pointsEnabled ? 'totalPoints' : 'taskCount'];
+                const barWidth = Math.max(4, Math.round((currentVal / maxVal) * 100));
                 const emoji = EMOJI_MAP[cat.category] || '📋';
                 const color = COLORS[idx % COLORS.length];
                 const onTimeRate = cat.taskCount > 0 ? Math.round((cat.onTime / cat.taskCount) * 100) : 0;
@@ -211,7 +251,7 @@ const AnalyticsPage = () => {
                       </div>
                       <div className="flex items-center space-x-4 text-xs font-bold">
                         <span className="text-gray-400 dark:text-slate-500">{cat.totalTime} mins</span>
-                        <span style={{ color }} className="text-sm font-black">{cat.totalPoints} pts</span>
+                        {pointsEnabled && <span style={{ color }} className="text-sm font-black">{cat.totalPoints} pts</span>}
                       </div>
                     </div>
 

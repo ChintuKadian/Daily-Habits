@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import useCountdown from '../../hooks/useCountdown';
 import { useAudio } from '../../context/AudioContext';
+import { usePoints } from '../../context/PointsContext';
 import { Clock, AlertCircle, Trash2, Zap } from 'lucide-react';
 
 // Mirror the server point values here for preview (no import needed)
@@ -13,6 +14,7 @@ const POINTS_PREVIEW = {
 const TaskCard = ({ task, onComplete, onRecover, onDelete }) => {
   const { hours, mins, secs, isOverdue } = useCountdown(task.deadline);
   const { playPop, playError } = useAudio();
+  const { pointsEnabled } = usePoints();
   const [showTimePopup, setShowTimePopup] = useState(false);
   const [timeSpent, setTimeSpent] = useState('');
 
@@ -101,7 +103,7 @@ const TaskCard = ({ task, onComplete, onRecover, onDelete }) => {
             </span>
 
             {/* Priority + Points Preview — only show when pending */}
-            {!isCompleted && !isLocked && (
+            {pointsEnabled && !isCompleted && !isLocked && (
               <span className={`flex items-center space-x-1 px-2 py-0.5 rounded-md font-bold ${
                 isLate
                   ? 'bg-red-50 dark:bg-red-900/30 text-red-500 dark:text-red-400'
@@ -151,9 +153,11 @@ const TaskCard = ({ task, onComplete, onRecover, onDelete }) => {
           </span>
         ) : isCompleted ? (
           <div className="flex flex-col items-end text-xs font-bold">
-            <span className={`${task.multiplierApplied < 1 ? 'text-orange-500' : 'text-green-500 dark:text-green-400'}`}>
-              + {task.pointsAwarded} pts {task.multiplierApplied < 1 ? '(late)' : '✓'}
-            </span>
+            {pointsEnabled && (
+              <span className={`${task.multiplierApplied < 1 ? 'text-orange-500' : 'text-green-500 dark:text-green-400'}`}>
+                + {task.pointsAwarded} pts {task.multiplierApplied < 1 ? '(late)' : '✓'}
+              </span>
+            )}
             <span className="text-gray-400 dark:text-slate-500 font-medium">{task.timeSpent} mins logged</span>
           </div>
         ) : (
@@ -190,7 +194,7 @@ const TaskCard = ({ task, onComplete, onRecover, onDelete }) => {
                   </button>
                 </div>
                 <p className="text-xs text-gray-400 dark:text-slate-500 mt-1.5">
-                  You'll earn <span className="font-bold text-indigo-500">{isLate ? preview.late : preview.onTime} pts</span>
+                  {pointsEnabled && <>You'll earn <span className="font-bold text-indigo-500">{isLate ? preview.late : preview.onTime} pts</span></>}
                 </p>
               </div>
             )}
