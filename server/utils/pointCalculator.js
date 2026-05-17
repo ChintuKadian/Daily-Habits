@@ -12,15 +12,15 @@
 /** Base points awarded per priority level before any multiplier. */
 const BASE_POINTS = Object.freeze({
   high:   100,
-  medium: 50,
-  low:    20,
+  medium: 60,
+  low:    30,
 });
 
 /** Multiplier applied when task is completed before its deadline. */
-const MULTIPLIER_ON_TIME = 1.2;
+const MULTIPLIER_ON_TIME = 1.0;   // Full points — complete before deadline
 
 /** Multiplier applied when task is completed in Recovery Mode (after deadline). */
-const MULTIPLIER_RECOVERY = 0.5;
+const MULTIPLIER_RECOVERY = 0.5; // Half points — late penalty
 
 /**
  * Rank thresholds — evaluated from highest to lowest.

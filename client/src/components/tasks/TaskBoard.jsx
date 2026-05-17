@@ -83,9 +83,9 @@ const TaskBoard = ({ onTaskAction }) => {
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-slate-300 mb-1">Priority</label>
               <select value={newTask.priority} onChange={e => setNewTask({...newTask, priority: e.target.value})} className="w-full p-2 border dark:border-slate-600 rounded-lg dark:bg-slate-700 dark:text-white">
-                <option value="high">High (100 pts)</option>
-                <option value="medium">Medium (50 pts)</option>
-                <option value="low">Low (20 pts)</option>
+                <option value="high">🔴 High — 100 pts (50 pts if late)</option>
+                <option value="medium">🟠 Medium — 60 pts (30 pts if late)</option>
+                <option value="low">🟢 Low — 30 pts (15 pts if late)</option>
               </select>
             </div>
             <div>
