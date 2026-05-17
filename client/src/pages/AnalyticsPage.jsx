@@ -4,32 +4,56 @@ import axios from '../api/axios';
 import { TrendingUp, Award, Zap, Calendar } from 'lucide-react';
 import ContributionHeatmap from '../components/analytics/ContributionHeatmap';
 
+const EMOJI_MAP = { Work:'💼', Study:'📚', Health:'🏃', Personal:'🌱', Finance:'💰', Creative:'🎨', Social:'👥', Home:'🏠', General:'📋' };
+const COLORS   = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#f97316','#84cc16'];
+
 const AnalyticsPage = () => {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData]             = useState(null);
+  const [loading, setLoading]       = useState(true);
+  const [categoryData, setCategoryData] = useState([]);
 
   useEffect(() => {
-    const fetchAnalytics = async () => {
+    const fetchAll = async () => {
       try {
-        const res = await axios.get('/analytics');
-        if (res.data.success) {
-          const analyticsData = res.data.analytics;
-          const modifiedData = {
-            ...analyticsData,
-            chartData: analyticsData.chartData.map(d => ({
-              ...d,
-              timeSpent: d.timeSpent === 0 ? null : d.timeSpent
+        // 1. Main analytics (scores / heatmap)
+        const analyticsRes = await axios.get('/analytics');
+        if (analyticsRes.data.success) {
+          const d = analyticsRes.data.analytics;
+          setData({
+            ...d,
+            chartData: d.chartData.map(row => ({
+              ...row,
+              timeSpent: row.timeSpent === 0 ? null : row.timeSpent
             }))
-          };
-          setData(modifiedData);
+          });
+        }
+
+        // 2. Category breakdown — compute from tasks directly
+        const tasksRes = await axios.get('/tasks');
+        if (tasksRes.data.success) {
+          const completed = tasksRes.data.tasks.filter(t => t.status === 'completed');
+          const map = {};
+          completed.forEach(task => {
+            const cat = task.category || 'General';
+            if (!map[cat]) map[cat] = { category: cat, taskCount: 0, totalPoints: 0, totalTime: 0, onTime: 0, late: 0 };
+            map[cat].taskCount++;
+            map[cat].totalPoints += task.pointsAwarded || 0;
+            map[cat].totalTime   += task.timeSpent     || 0;
+            if (task.isRecovery || (task.multiplierApplied !== null && task.multiplierApplied < 1))
+              map[cat].late++;
+            else
+              map[cat].onTime++;
+          });
+          const sorted = Object.values(map).sort((a, b) => b.totalPoints - a.totalPoints);
+          setCategoryData(sorted);
         }
       } catch (error) {
-        console.error("Failed to fetch analytics", error);
+        console.error('Failed to fetch analytics', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchAnalytics();
+    fetchAll();
   }, []);
 
   const last7DaysPoints = useMemo(() => {
@@ -156,7 +180,7 @@ const AnalyticsPage = () => {
           <span className="text-sm text-gray-400 dark:text-slate-500 font-medium">All-time completed tasks</span>
         </div>
 
-        {(!data.categoryData || data.categoryData.length === 0) ? (
+        {categoryData.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-10 text-center text-gray-400 dark:text-slate-500">
             <span className="text-4xl mb-3">📊</span>
             <p className="font-bold text-gray-500 dark:text-slate-400">No category data yet</p>
@@ -165,13 +189,10 @@ const AnalyticsPage = () => {
         ) : (
           <div className="space-y-5">
             {(() => {
-              const EMOJI = { Work:'💼', Study:'📚', Health:'🏃', Personal:'🌱', Finance:'💰', Creative:'🎨', Social:'👥', Home:'🏠', General:'📋' };
-              const COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#f97316','#84cc16'];
-              const maxPts = data.categoryData[0]?.totalPoints || 1;
-
-              return data.categoryData.map((cat, idx) => {
+              const maxPts = categoryData[0]?.totalPoints || 1;
+              return categoryData.map((cat, idx) => {
                 const barWidth = Math.max(4, Math.round((cat.totalPoints / maxPts) * 100));
-                const emoji = EMOJI[cat.category] || '📋';
+                const emoji = EMOJI_MAP[cat.category] || '📋';
                 const color = COLORS[idx % COLORS.length];
                 const onTimeRate = cat.taskCount > 0 ? Math.round((cat.onTime / cat.taskCount) * 100) : 0;
 
