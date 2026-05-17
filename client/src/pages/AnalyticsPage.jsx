@@ -150,14 +150,20 @@ const AnalyticsPage = () => {
       </div>
 
       {/* ── Category Breakdown ─────────────────────────────────── */}
-      {data.categoryData && data.categoryData.length > 0 && (
-        <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 transition-colors">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-bold text-gray-800 dark:text-slate-100">Tasks by Category</h3>
-            <span className="text-sm text-gray-400 dark:text-slate-500 font-medium">All-time completed tasks</span>
-          </div>
+      <div className="bg-white dark:bg-slate-800 p-8 rounded-3xl shadow-sm border border-gray-100 dark:border-slate-700 transition-colors">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-xl font-bold text-gray-800 dark:text-slate-100">Tasks by Category</h3>
+          <span className="text-sm text-gray-400 dark:text-slate-500 font-medium">All-time completed tasks</span>
+        </div>
 
-          <div className="space-y-4">
+        {(!data.categoryData || data.categoryData.length === 0) ? (
+          <div className="flex flex-col items-center justify-center py-10 text-center text-gray-400 dark:text-slate-500">
+            <span className="text-4xl mb-3">📊</span>
+            <p className="font-bold text-gray-500 dark:text-slate-400">No category data yet</p>
+            <p className="text-sm mt-1">Complete tasks in different categories to see your breakdown here.</p>
+          </div>
+        ) : (
+          <div className="space-y-5">
             {(() => {
               const EMOJI = { Work:'💼', Study:'📚', Health:'🏃', Personal:'🌱', Finance:'💰', Creative:'🎨', Social:'👥', Home:'🏠', General:'📋' };
               const COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#ec4899','#f97316','#84cc16'];
@@ -170,8 +176,7 @@ const AnalyticsPage = () => {
                 const onTimeRate = cat.taskCount > 0 ? Math.round((cat.onTime / cat.taskCount) * 100) : 0;
 
                 return (
-                  <div key={cat.category} className="group">
-                    {/* Label row */}
+                  <div key={cat.category}>
                     <div className="flex items-center justify-between mb-1.5">
                       <div className="flex items-center space-x-2">
                         <span className="text-lg">{emoji}</span>
@@ -184,21 +189,19 @@ const AnalyticsPage = () => {
                         )}
                       </div>
                       <div className="flex items-center space-x-4 text-xs font-bold">
-                        <span className="text-gray-400 dark:text-slate-500">{cat.totalTime} mins logged</span>
+                        <span className="text-gray-400 dark:text-slate-500">{cat.totalTime} mins</span>
                         <span style={{ color }} className="text-sm font-black">{cat.totalPoints} pts</span>
                       </div>
                     </div>
 
-                    {/* Progress bar */}
                     <div className="h-3 bg-gray-100 dark:bg-slate-700 rounded-full overflow-hidden">
                       <div
                         className="h-3 rounded-full transition-all duration-700"
-                        style={{ width: `${barWidth}%`, backgroundColor: color, opacity: 0.85 }}
+                        style={{ width: `${barWidth}%`, backgroundColor: color }}
                       />
                     </div>
 
-                    {/* On-time vs Late breakdown */}
-                    <div className="flex items-center space-x-3 mt-1 text-xs text-gray-400 dark:text-slate-500">
+                    <div className="flex items-center space-x-3 mt-1 text-xs">
                       <span className="text-green-500 font-medium">✓ {cat.onTime} on time</span>
                       {cat.late > 0 && <span className="text-orange-400 font-medium">⚠ {cat.late} late</span>}
                     </div>
@@ -207,8 +210,8 @@ const AnalyticsPage = () => {
               });
             })()}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
