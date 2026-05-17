@@ -125,7 +125,7 @@ const HabitsPage = () => {
             className="bg-indigo-600 text-white px-5 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-colors shadow-md flex items-center space-x-2"
           >
             <Plus className="w-5 h-5" />
-            <span>+ Habit</span>
+            <span>Habit</span>
           </button>
         </div>
       </div>

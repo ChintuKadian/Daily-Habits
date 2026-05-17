@@ -27,10 +27,10 @@ const MULTIPLIER_RECOVERY = 0.5; // Half points — late penalty
  * `minPoints` is the minimum cumulative daily score required for that rank.
  */
 const RANK_THRESHOLDS = Object.freeze([
-  { rank: 'S', minPoints: 1000, label: 'S-Rank', description: 'Legendary'   },
-  { rank: 'A', minPoints: 700,  label: 'A-Rank', description: 'Elite'        },
-  { rank: 'B', minPoints: 400,  label: 'B-Rank', description: 'Solid'        },
-  { rank: 'C', minPoints: 200,  label: 'C-Rank', description: 'Average'      },
+  { rank: 'S', minPoints: 500,  label: 'S-Rank', description: 'Legendary'   },
+  { rank: 'A', minPoints: 350,  label: 'A-Rank', description: 'Elite'        },
+  { rank: 'B', minPoints: 200,  label: 'B-Rank', description: 'Solid'        },
+  { rank: 'C', minPoints: 100,  label: 'C-Rank', description: 'Average'      },
   { rank: 'D', minPoints: 0,    label: 'D-Rank', description: 'Keep pushing' },
 ]);
 

@@ -78,11 +78,11 @@ const Scoreboard = ({ refreshKey = 0 }) => {
             <div className="absolute right-0 top-6 w-56 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 shadow-xl rounded-xl p-3 opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 z-10 text-sm">
               <p className="font-bold text-gray-800 dark:text-slate-100 mb-2 border-b dark:border-slate-700 pb-1">Daily Rank Guide</p>
               <ul className="space-y-1 text-gray-600 dark:text-slate-300 text-xs">
-                <li className="flex justify-between"><span className="font-bold text-yellow-500">⭐ S-Rank</span><span>1000+ pts</span></li>
-                <li className="flex justify-between"><span className="font-bold text-purple-500">💜 A-Rank</span><span>700+ pts</span></li>
-                <li className="flex justify-between"><span className="font-bold text-blue-500">💙 B-Rank</span><span>400+ pts</span></li>
-                <li className="flex justify-between"><span className="font-bold text-green-500">💚 C-Rank</span><span>200+ pts</span></li>
-                <li className="flex justify-between"><span className="font-bold text-gray-500">🩶 D-Rank</span><span>0–199 pts</span></li>
+                <li className="flex justify-between"><span className="font-bold text-yellow-500">⭐ S-Rank</span><span>500+ pts</span></li>
+                <li className="flex justify-between"><span className="font-bold text-purple-500">💜 A-Rank</span><span>350+ pts</span></li>
+                <li className="flex justify-between"><span className="font-bold text-blue-500">💙 B-Rank</span><span>200+ pts</span></li>
+                <li className="flex justify-between"><span className="font-bold text-green-500">💚 C-Rank</span><span>100+ pts</span></li>
+                <li className="flex justify-between"><span className="font-bold text-gray-500">🩶 D-Rank</span><span>0–99 pts</span></li>
               </ul>
               <p className="mt-2 pt-2 border-t dark:border-slate-700 text-xs text-gray-400">Points reset each day. Complete tasks before their deadline for full points. Late = 50% penalty.</p>
             </div>

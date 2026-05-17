@@ -186,7 +186,7 @@ const TaskCard = ({ task, onComplete, onRecover, onDelete }) => {
                     onClick={handleConfirm}
                     className="flex-1 bg-indigo-600 text-white rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700 transition-colors"
                   >
-                    Done ✓
+                    Save Time
                   </button>
                 </div>
                 <p className="text-xs text-gray-400 dark:text-slate-500 mt-1.5">
